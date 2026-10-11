@@ -1,0 +1,17 @@
+{
+  "name": "citekeep",
+  "version": "30.0.0",
+  "description": "Free APA 7 reference manager that checks the citations you type.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "setup": "cd app && neu update",
+    "app": "node build.js && cd app && neu build --release",
+    "dev": "node build.js && cd app && neu run",
+    "package:windows": "node build.js && cd app && neu build --release && cd .. && node tools/package-windows.js"
+  },
+  "devDependencies": {
+    "@neutralinojs/neu": "^11.0.0"
+  }
+}

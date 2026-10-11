@@ -1,0 +1,305 @@
+<title>Citekeep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: app shell — top bar with tabs; library is a catalog list beside a reading card; other tabs are single working columns. */
+:root{
+  --paper:#F4F5F1; --surface:#FFFFFF; --sunk:#ECEEE8; --ink:#1C2228; --muted:#5B656D; --line:#D8DCD3;
+  --accent:#2C6A4E; --accent-ink:#FFFFFF; --accent-soft:#E2EEE7;
+  --ok:#2E7D4F; --warn:#9A6408; --warn-soft:#F7EEDB; --bad:#A8322A; --bad-soft:#F6E3E1;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#14181B; --surface:#1C2125; --sunk:#181C20; --ink:#E6E9E5; --muted:#9BA5AD; --line:#2F363C;
+  --accent:#6FBF98; --accent-ink:#0E1A14; --accent-soft:#1F3229;
+  --ok:#6FBF98; --warn:#E0B060; --warn-soft:#33291A; --bad:#EE8A80; --bad-soft:#3A2321; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#14181B; --surface:#1C2125; --sunk:#181C20; --ink:#E6E9E5; --muted:#9BA5AD; --line:#2F363C;
+  --accent:#6FBF98; --accent-ink:#0E1A14; --accent-soft:#1F3229;
+  --ok:#6FBF98; --warn:#E0B060; --warn-soft:#33291A; --bad:#EE8A80; --bad-soft:#3A2321; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding-inline:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.brand{font-family:var(--serif);font-weight:600;font-size:20px;letter-spacing:.01em}
+.brand small{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:.04em;text-transform:uppercase}
+nav.tabs{display:flex;gap:2px;flex-wrap:wrap}
+nav.tabs button{background:none;border:0;padding:7px 12px;border-radius:var(--r);cursor:pointer;color:var(--muted);font-weight:500}
+nav.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--ink)}
+nav.tabs button:hover{color:var(--ink)}
+.store{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)} .dot.off{background:var(--warn)}
+main{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+.banner{background:var(--warn-soft);color:var(--ink);border:1px solid var(--line);border-left:3px solid var(--warn);padding:10px 12px;border-radius:var(--r);margin-bottom:16px}
+h2{font-family:var(--serif);font-weight:600;font-size:22px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 8px;font-weight:600}
+p.lede{color:var(--muted);margin:0 0 16px;max-width:68ch}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:var(--r);cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)} .btn.danger.armed{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;width:100%}
+textarea{resize:vertical;min-height:70px}
+label.f{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+label.f > span{text-transform:uppercase;letter-spacing:.05em}
+/* library */
+.lib{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.lib{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.pane-h{padding:12px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.list{max-height:calc(100vh - 230px);overflow:auto}
+@media (max-width:860px){.list{max-height:46vh}}
+.item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px;cursor:pointer}
+.item:hover{background:var(--sunk)}
+.item[aria-current="true"]{background:var(--accent-soft)}
+.item .cite{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:500}
+.item .ttl{font-family:var(--serif);font-size:14.5px;line-height:1.35;margin-top:2px;overflow-wrap:anywhere}
+.count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.detail{padding:20px;display:grid;gap:14px}
+.refcard{font-family:var(--serif);font-size:16px;line-height:1.7;padding:14px 16px 14px calc(16px + .5in);text-indent:-.5in;background:var(--sunk);border-radius:var(--r);overflow-wrap:anywhere}
+.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.form{border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.form code{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.form small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.copy{border:0;background:none;color:var(--accent);cursor:pointer;font-weight:500;font-size:12px;padding:4px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
+.empty{padding:28px 20px;color:var(--muted);text-align:left}
+.empty b{color:var(--ink);font-family:var(--serif);font-size:17px;display:block;margin-bottom:4px;font-weight:600}
+/* check */
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px;background:var(--surface);display:grid;gap:10px;justify-items:start}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;border-top:3px solid var(--line)}
+.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums;font-family:var(--serif);font-weight:600}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.ok{border-top-color:var(--ok)} .stat.bad{border-top-color:var(--bad)} .stat.warn{border-top-color:var(--warn)}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.mono{font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.ctx{font-family:var(--serif);color:var(--muted);min-width:260px}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;font-weight:600}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.ok{background:var(--accent-soft);color:var(--ok)}
+.allgood{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px}
+/* reference list */
+.bib{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px 32px}
+.bib h4{font-family:var(--serif);text-align:center;font-weight:600;font-size:16px;margin:0 0 12px}
+.bib p{font-family:var(--serif);font-size:15.5px;line-height:2;margin:0;padding-left:.5in;text-indent:-.5in;overflow-wrap:anywhere}
+.bib.ordering p{cursor:grab;border-radius:4px;user-select:none}.bib.ordering p:hover{background:var(--sunk)}.bib .grip{display:inline-block;width:.3in;text-indent:0;color:var(--muted);font-family:var(--sans)}.bib p.dragging{opacity:.4}.bib p.drop-before{box-shadow:inset 0 3px 0 var(--accent)}.bib p.drop-after{box-shadow:inset 0 -3px 0 var(--accent)}
+@media (max-width:600px){.bib{padding:18px 16px}}
+.paste{min-height:140px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-family:var(--serif);overflow:auto;max-height:340px}
+.paste:empty::before{content:attr(data-ph);color:var(--muted)}
+a.doi{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.menu{position:fixed;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px;display:grid;min-width:240px}
+.menu button{background:none;border:0;text-align:left;padding:8px 10px;border-radius:4px;cursor:pointer}
+.menu button:hover,.menu button:focus-visible{background:var(--accent-soft)}
+.panel-wrap{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;width:min(760px,100%);max-height:85vh;overflow:auto;display:grid;gap:10px}
+details.sty{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:8px}
+details.sty summary{cursor:pointer;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fixbox{margin-left:auto;font-weight:400;font-size:13px;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+ul.stylist{margin:8px 0 4px;padding-left:18px;display:grid;gap:6px;font-size:13px}
+.cnt{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+details.doclist summary{cursor:pointer;color:var(--muted);margin-top:22px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:var(--r);font-size:13px;z-index:20;max-width:calc(100% - 32px)}
+.note{font-size:12px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start}
+.mxwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.mxt{border-collapse:collapse;font-size:12px;min-width:1100px;width:100%}
+.mxt th{position:sticky;top:0;background:var(--sunk);font-weight:600;padding:6px;border:1px solid var(--line);text-align:center}
+.mxt thead tr:nth-child(2) th{top:29px}
+.mxt td{border:1px solid var(--line);padding:6px;vertical-align:top;white-space:pre-wrap}
+.mxt td.c{text-align:center}
+.mxt tbody tr{cursor:pointer} .mxt tbody tr:hover td{background:var(--sunk)}
+.mxt td.mxd,.mxf.draft textarea{background:var(--warn-soft)}
+div.f.mxf{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:500} div.f.mxf > span{text-transform:uppercase;letter-spacing:.05em}
+.mxbox{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.mxbox summary{cursor:pointer}
+.mxbox textarea{width:100%;font:inherit;font-size:14px;resize:vertical}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:50;padding:16px}.modal{background:var(--surface);color:var(--ink);border-radius:var(--r);padding:22px;max-width:440px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px;min-width:0}
+@media (prefers-reduced-motion:no-preference){.item,.btn{transition:background .12s,border-color .12s}}
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand">Citekeep<small>APA 7</small></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="library" aria-selected="true">Library</button>
+    <button role="tab" data-tab="check" aria-selected="false">Open a document</button>
+    <button role="tab" data-tab="bib" aria-selected="false">Reference list</button>
+    <button role="tab" data-tab="matrix" aria-selected="false">Matrix</button>
+    <button role="tab" data-tab="io" aria-selected="false">Import &amp; export</button>
+    <button role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    <button role="tab" data-tab="help" aria-selected="false">Help</button>
+  </nav>
+  <div class="store"><span class="dot" id="storeDot"></span><span id="storeText">Connecting…</span></div>
+</div></header>
+
+<main>
+<div class="banner" id="memBanner" hidden>Your library can't be saved in this view. Anything you add here disappears when the page closes. Open Citekeep from your Claude account to keep it.</div>
+
+<!-- LIBRARY -->
+<section id="tab-library">
+  <div class="lib">
+    <div class="pane">
+      <div class="pane-h">
+        <div class="row"><input type="search" id="q" placeholder="Search authors, titles, years, tags"></div>
+        <div class="row"><button class="btn primary" id="openDocBtn">Open a Word document</button><button class="btn" id="newBtn">New</button></div>
+        <div class="row" style="flex-wrap:nowrap">
+          <select id="fType" aria-label="Filter by type"><option value="">All types</option><option value="article">Journal articles</option><option value="book">Books</option><option value="chapter">Chapters</option><option value="report">Reports</option><option value="webpage">Web pages</option><option value="legal">Laws</option><option value="other">Other</option></select>
+          <select id="fTag" aria-label="Filter by tag"><option value="">All tags</option></select>
+        </div>
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="lookupIn" placeholder="Add by DOI or ISBN" aria-label="DOI or ISBN"><button class="btn" id="lookupBtn">Look up</button></div>
+        <div class="count" id="count"></div>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="pane" id="detail"></div>
+  </div>
+</section>
+
+<!-- CHECK -->
+<section id="tab-check" hidden>
+  <h2>Open a document</h2>
+  <p class="lede">Open any Word file with a reference list. Citekeep pulls every reference into your library, skipping ones you already have, then checks the in-text citations against the list and can save a copy with each citation linked to its reference. Choose several chapters together to check them against one combined reference list.</p>
+  <label class="drop" id="drop" for="docIn">
+    <b style="font-family:var(--serif);font-size:17px">Drop a .docx here, or several chapters at once</b>
+    <span class="note">or choose a file. The file is read on your computer; nothing is uploaded.</span>
+    <span class="btn">Choose file</span>
+    <input type="file" id="docIn" accept=".docx" multiple hidden>
+  </label>
+  <div id="checkOut"></div>
+</section>
+
+<!-- BIB -->
+<section id="tab-bib" hidden>
+  <h2>Reference list</h2>
+  <p class="lede">Build an APA reference list from your library, sorted and with a/b suffixes assigned. Copy it into Word or save it as a formatted .docx.</p>
+  <div class="row" style="margin-bottom:14px">
+    <select id="bibSrc" style="max-width:340px" aria-label="Which references"></select>
+    <button class="btn" id="bibCopy">Copy</button>
+    <button class="btn primary" id="bibSave">Save as .docx</button>
+  </div>
+  <div class="bib" id="bibOut"></div>
+</section>
+
+<!-- MATRIX -->
+<section id="tab-matrix" hidden>
+  <h2>Literature matrix</h2>
+  <p class="lede">One row per reference, in the classic literature-review matrix layout: Author(s), Sample, Methodology (QUAN, QUAL, MIX), Theoretical Framework / Constructs, Design / Data Analysis, and Findings. Fill a row in the Library, import your existing matrix, or let AI draft rows from your PDFs for you to review. Save it as a Word file with its reference list.</p>
+  <div class="row" style="margin-bottom:10px">
+    <select id="mxSrc" style="max-width:340px" aria-label="Which references"></select>
+    <label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="mxOnly" checked>Only references with a matrix row</label>
+  </div>
+  <div class="row" style="margin-bottom:12px">
+    <label class="f" style="flex:1;min-width:240px"><span>Matrix title</span><input type="text" id="mxTitle"></label>
+  </div>
+  <div class="row" style="margin-bottom:12px">
+    <button class="btn primary" id="mxSave">Save matrix (.docx)</button>
+    <label class="btn" for="mxIn">Import a matrix (.docx)</label><input type="file" id="mxIn" accept=".docx" hidden>
+    <button class="btn" id="mxBatch">Draft with AI</button>
+  </div>
+  <div class="note" id="mxProg" style="margin-bottom:8px"></div>
+  <div id="mxReport"></div>
+  <div class="stats" id="mxStats"></div>
+  <div class="mxwrap" id="mxTable"></div>
+</section>
+
+<!-- SETTINGS -->
+<section id="tab-settings" hidden>
+  <h2>Settings</h2>
+  <p class="lede">Everything Citekeep needs to know in one place: your PDFs, the AI used for matrix drafts and claim checks, and where your data lives, including backups, moving computers and updates.</p>
+  <div class="cols" id="settingsCols">
+    <div class="card" id="pdfCard"></div>
+    <div class="card" id="aiCard"></div>
+  </div>
+</section>
+
+<!-- HELP -->
+<section id="tab-help" hidden>
+  <h2>How to use Citekeep</h2>
+  <p class="lede">Citekeep keeps your references, checks the citations you typed, and works with your PDFs. Each part below takes a minute to read.</p>
+  <div class="cols guide">
+    <div class="card"><h3>1. Build your library</h3><ol class="stylist">
+      <li><b>Open a document</b> tab: choose a Word file with a reference list. Every reference goes into your library.</li>
+      <li>Or add one at a time: <b>Look up</b> a DOI or ISBN in the Library, <b>New</b> to type it in, or <b>Add from PDF</b>.</li>
+      <li>Organize with tags. Use a slash for folders, like <i>Dissertation/Chapter 2</i>. <b>Tag shown</b> tags everything currently listed.</li>
+      <li><b>Duplicates</b> finds the same work entered twice and merges it.</li></ol></div>
+    <div class="card"><h3>2. Check a chapter</h3><ol class="stylist">
+      <li>Open the chapter on the <b>Open a document</b> tab. Citekeep lists citations with no reference, references never cited, near-miss spellings, and APA 7 problems.</li>
+      <li>Pick the corrections you want, then <b>Save a linked copy</b>. Every citation in the copy is linked to its reference (Ctrl+click in Word). Your original isn't changed.</li>
+      <li>Tick <b>Rebuild the reference list</b> to replace the list with a fresh, alphabetized one holding only what the text cites.</li>
+      <li>Choose several chapters at once to check them against one combined list.</li></ol></div>
+    <div class="card"><h3>3. Link your PDFs</h3><ol class="stylist">
+      <li>In <b>Settings → Your PDFs</b>, choose the folder that holds your PDFs, then click <b>Match files to references</b>. File names don't matter; Citekeep reads the DOI and title inside each PDF.</li>
+      <li>For a reference without a PDF: <b>Free PDF</b> finds a legal free copy, <b>Search for PDF</b> searches the web, and anything you download is filed and linked automatically.</li>
+      <li>Tick <b>Search inside PDFs</b> in the Library to find words in your articles.</li></ol></div>
+    <div class="card"><h3>4. Set up AI (optional)</h3><ol class="stylist">
+      <li>In <b>Settings → AI drafting</b>, choose LM Studio (free, on your computer) or the Claude API (your own key).</li>
+      <li>For LM Studio: start its server, turn on <b>Enable CORS</b>, load your model with a context length of 32768, then click <b>Test connection</b>.</li>
+      <li>AI is used for two things: drafting matrix rows and checking claims.</li></ol></div>
+    <div class="card"><h3>5. Build the matrix</h3><ol class="stylist">
+      <li><b>Matrix</b> tab: <b>Import a matrix</b> brings in an existing Word matrix, row by row.</li>
+      <li>Fill or edit a row in the Library under each reference's <b>Matrix row</b>, or use <b>Draft with AI</b>. Drafts stay marked until you accept them.</li>
+      <li><b>Save matrix (.docx)</b> writes the table and its APA reference list.</li></ol></div>
+    <div class="card"><h3>6. Check claims</h3><ol class="stylist">
+      <li>Open a chapter, then click <b>Check claims</b>. For each cited sentence, the AI reads the cited PDF and says whether it supports the sentence, quoting the passage and page.</li>
+      <li>Work through <b>Show only claims that need attention</b>. <b>PDF page</b> opens the PDF at the passage; <b>Recheck</b> asks again.</li>
+      <li>Results are saved, so you can stop and come back. <b>Save report (.docx)</b> gives you a copy to keep.</li></ol></div>
+    <div class="card"><h3>7. Reference lists and export</h3><ol class="stylist">
+      <li><b>Reference list</b> tab: build an APA list from your library or one document, adjust the order by dragging, then copy it or save it as Word.</li>
+      <li><b>Import &amp; export</b>: paste a reference list, or move references to and from Zotero with RIS or BibTeX.</li></ol></div>
+    <div class="card"><h3>8. Your data, backups and updates</h3><ol class="stylist">
+      <li>Everything lives in <b>Documents\Citekeep</b>. A backup is made each day; the last 10 are kept (<b>Settings → Your Citekeep data</b>).</li>
+      <li>New computer: <b>Export transfer file</b> here, <b>Import transfer file</b> there.</li>
+      <li>Updates: Citekeep checks once a day, or click <b>Check for updates</b>. It never installs an older version over a newer one.</li></ol></div>
+  </div>
+</section>
+
+<!-- IMPORT / EXPORT -->
+<section id="tab-io" hidden>
+  <h2>Import &amp; export</h2>
+  <p class="lede">Bring references in from a pasted reference list, RIS or BibTeX, or a Citekeep backup. To add a single reference by DOI or ISBN, use the Look up box in the Library. Duplicates already in your library are skipped.</p>
+  <div class="cols">
+    <div class="card">
+      <h3 style="margin:0">Paste a reference list</h3>
+      <div class="paste" id="pasteBox" contenteditable="true" data-ph="Paste references from Word, one per paragraph. Italics are kept." role="textbox" aria-multiline="true"></div>
+      <div class="row"><button class="btn primary" id="pasteImport">Add to library</button><span class="note" id="pasteNote"></span></div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0">RIS, BibTeX or backup file</h3>
+      <textarea id="rawBox" rows="7" placeholder="Paste RIS (TY  - JOUR …) or BibTeX (@article{…}) here, or choose a file below."></textarea>
+      <div class="row"><input type="file" id="rawFile" accept=".ris,.bib,.txt,.json" style="max-width:100%"><button class="btn primary" id="rawImport">Import</button></div>
+      <span class="note" id="rawNote"></span>
+    </div>
+    <div class="card">
+      <h3 style="margin:0">Export</h3>
+      <p class="note" style="margin:0">Save your whole library. The Citekeep backup keeps everything, including tags, notes and your exact reference wording.</p>
+      <div class="row"><button class="btn" data-exp="json">Citekeep backup (.json)</button><button class="btn" data-exp="ris">RIS</button><button class="btn" data-exp="bib">BibTeX</button></div>
+      <p class="note" style="margin:0">Your library and settings are saved in Documents\Citekeep (library.json, library-previous.json as a safety copy, and settings.json). Save a backup now and then, and use it to move your library to another computer.</p><h3 style="margin:10px 0 0">Start over</h3>
+      <div class="row"><button class="btn danger" id="wipe">Delete entire library</button></div>
+    </div>
+  </div>
+</section>
+</main>
+<div class="menu" id="doiMenu" role="menu" hidden>
+  <button role="menuitem" data-act="open">Open the article</button>
+  <button role="menuitem" data-act="check">Check this DOI against the entry</button>
+  <button role="menuitem" data-act="fill">Fill in this reference from the DOI</button>
+  <button role="menuitem" data-act="copy">Copy DOI</button>
+</div>
+<div class="panel-wrap" id="doiPanel" hidden><div class="panel" role="dialog" aria-label="DOI check"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b style="font-family:var(--serif);font-size:17px">DOI check</b><button class="btn" id="doiPanelClose">Close</button></div><div id="doiPanelBody"></div></div></div>
+<div class="toast" id="toast" hidden></div>

@@ -52,6 +52,10 @@ Citekeep has no account and no server; nothing is uploaded except the lookups yo
 - **Google Drive**: create your own Google Cloud OAuth client. The step-by-step guide is in the app under Settings → Your PDFs → Google Drive setup. Be sure to add your own Gmail address as a **test user**; otherwise Google shows "Access blocked: … has not completed the Google verification process." Signing in lets Citekeep see your Drive files' names and links (not their contents), match Drive PDFs by name, and save a .txt list of any Drive folder. If you use Google Drive for desktop, pointing Citekeep's PDF folder at your synced Drive folder gives you everything without signing in.
 - **AI drafting**: in LM Studio, start the server, turn on **Enable CORS**, and load your model with a context length of 32768 or more. Then click Test connection in Settings → AI drafting. The instructions given to the AI can be edited there.
 
+## Building from source
+
+The full source is in this repository. See [BUILDING.md](BUILDING.md) for building, how the code is organized, and notes on porting to macOS or Linux.
+
 ## Credits
 
 Built with [Neutralinojs](https://neutralino.js.org) (MIT), [PDF.js](https://mozilla.github.io/pdf.js/) (Apache 2.0) and [JSZip](https://stuk.github.io/jszip/) (MIT). See `THIRD-PARTY-NOTICES.txt`.

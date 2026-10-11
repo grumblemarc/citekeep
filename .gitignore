@@ -1,0 +1,10 @@
+node_modules/
+app/bin/
+app/dist/
+app/.storage/
+app/.tmp/
+app/resources/index.html
+installer/windows/*.exe
+installer/windows/resources.neu
+installer/windows/LICENSE.txt
+installer/windows/THIRD-PARTY-NOTICES.txt
