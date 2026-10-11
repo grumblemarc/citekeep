@@ -12,6 +12,7 @@ Most reference managers only understand citations you insert through their Word 
 - **Check citations against the reference list**: missing entries, uncited entries, near-miss spellings ("is this the reference you meant?"), *et al.* and ampersand errors, and APA 7 italics.
 - **Save a corrected copy** with every in-text citation linked to its reference (Ctrl+click in Word). Optionally rebuild the reference list: cited entries only, alphabetized, italics fixed, missing entries added from your library.
 - **Check several chapters at once** against one combined reference list.
+- **Check claims against your PDFs**: for each sentence that cites a source, AI reads the relevant passages of that source's PDF and reports whether they support the sentence. Each verdict quotes the passage and gives its page. Abstracts don't count as support. Verdicts are saved between sittings, and the report can be saved as a Word file.
 - **Retraction alerts** from Crossref.
 - **Your PDFs**: link a PDF folder and Citekeep matches each PDF to its reference by the DOI printed inside it or the title on its first page, so file names don't matter. It also:
   - finds free, legal copies through Unpaywall
@@ -20,6 +21,8 @@ Most reference managers only understand citations you insert through their Word 
 - **Literature matrix**: one row per reference (Author(s), Sample, Methodology, Theoretical Framework / Constructs, Design / Data Analysis, Findings). Import an existing matrix from Word, save it to Word, and optionally have AI draft rows from your PDFs for you to review. The AI can be [LM Studio](https://lmstudio.ai) running on your own computer (free, private) or the Claude API with your own key.
 - **Reference lists** in APA 7, with the order adjustable by dragging; export to RIS and BibTeX for Zotero and others.
 - **Moving computers**: export one transfer file, or keep your library in a Google Drive, OneDrive or Dropbox folder to share it between computers. Daily backups are kept automatically.
+
+A **Help** tab inside the app walks through each task, and all setup lives on the **Settings** tab.
 
 APA 7 only. Windows only.
 
@@ -46,8 +49,8 @@ Citekeep has no account and no server; nothing is uploaded except the lookups yo
 
 ## Optional setup
 
-- **Google Drive PDFs**: create your own Google Cloud OAuth client (the steps are in the app under Import & export → Your PDFs → Google Drive setup).
-- **AI drafting**: in LM Studio, start the server, turn on **Enable CORS**, and load your model with a context length of 32768 or more. Then click Test connection on the Matrix tab. The instructions given to the AI can be edited there.
+- **Google Drive**: create your own Google Cloud OAuth client. The step-by-step guide is in the app under Settings → Your PDFs → Google Drive setup. Be sure to add your own Gmail address as a **test user**; otherwise Google shows "Access blocked: … has not completed the Google verification process." Signing in lets Citekeep see your Drive files' names and links (not their contents), match Drive PDFs by name, and save a .txt list of any Drive folder. If you use Google Drive for desktop, pointing Citekeep's PDF folder at your synced Drive folder gives you everything without signing in.
+- **AI drafting**: in LM Studio, start the server, turn on **Enable CORS**, and load your model with a context length of 32768 or more. Then click Test connection in Settings → AI drafting. The instructions given to the AI can be edited there.
 
 ## Credits
 
